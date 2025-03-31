@@ -68,4 +68,5 @@ for (index1, index2), row in filtered_df.iterrows():
 oms = OverlappingMarkerSpiderfier().add_to(m)
 
 # st_folium(m)
+m.save('index.html')
 st_folium(m, key="map", width=900, height=600)
