@@ -9,7 +9,7 @@ df = pd.read_excel('Accommodation.xlsx')
 
 df.fillna(method='ffill', inplace=True)
 
-df.columns = ["Accommodation Type", "Features", "Location", "Distance to Strand", "Room Type", "Cost (per week)", "Details", "loc"]
+df.columns = ["Accommodation Type", "Features", "Location", "Distance to Strand", "Room Type", "Cost (per week)", "Details", "loc", "site"]
 df.set_index(["Accommodation Type", "Location"], inplace=True)
 df.drop(columns=["Features"], inplace=True)
 df["loc"] = df["loc"].apply(lambda x: ast.literal_eval(x))
@@ -53,6 +53,7 @@ for (index1, index2), row in filtered_df.iterrows():
             <li>Room Type: {row['Room Type']}</li>
             <li>Cost(per week): {row['Cost (per week)']}</li>
             <li>Details: {row['Details']}</li>
+            <li><a href="{row['site']}">site</a></li>
         </ul>
     """
     iframe = folium.IFrame(html=html, width=200, height=200)
