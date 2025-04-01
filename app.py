@@ -50,7 +50,7 @@ map_df[['NAME', 'geometry']].explore(
     m=m,
     name="NAME",
     cmap=None,
-    style_kwds={'color': None}
+    style_kwds={'color': None, 'fillOpacity': 0}
 )
 
 # Add King's Strand Campus marker
