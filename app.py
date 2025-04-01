@@ -4,8 +4,10 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 from folium.plugins import MarkerCluster, OverlappingMarkerSpiderfier
+import geopandas as gpd
 
 df = pd.read_excel('Accommodation.xlsx')
+map_df = gpd.read_file('London_Borough_Excluding_MHW.shp')
 
 df.fillna(method='ffill', inplace=True)
 
@@ -36,6 +38,20 @@ selected_rooms = st.sidebar.multiselect(
 filtered_df = filtered_df_location[filtered_df_location["Room Type"].isin(selected_rooms)] if selected_location else df
 
 m = folium.Map(location=[51.50161, -0.07625], zoom_start=12, width="%100", height="%100")
+
+
+geojson_layer = folium.GeoJson(
+    map_df,
+    name="Borough Boundaries",
+    style_function=lambda x: {'color':'blue', 'weight':2, 'fill':False}
+).add_to(m)
+
+map_df[['NAME', 'geometry']].explore(
+    m=m,
+    name="NAME",
+    cmap=None,
+    style_kwds={'color': None}
+)
 
 # Add King's Strand Campus marker
 folium.Marker(
