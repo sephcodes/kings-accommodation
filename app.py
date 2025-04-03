@@ -55,43 +55,72 @@ filtered_df = filtered_df_location[filtered_df_location["Room Type"].isin(select
 
 
 m = folium.Map(location=[51.50161, -0.07625], zoom_start=12, width="%100", height="%100")
+popup1 = folium.GeoJsonPopup(
+    fields=["NAME"],
+    aliases=["Borough"],
+    localize=True,
+    labels=True
+)
+popup2 = folium.GeoJsonPopup(
+    fields=["Name"],
+    aliases=["Zone"],
+    localize=True,
+    labels=True
+)
+
+tooltip1 = folium.GeoJsonTooltip(
+    fields=["NAME"],
+    aliases=["Borough"],
+    localize=True,
+    labels=True,
+    max_width=800,
+)
+tooltip2 = folium.GeoJsonTooltip(
+    fields=["Name"],
+    aliases=["Zone"],
+    localize=True,
+    labels=True,
+    max_width=800,
+)
 
 folium.GeoJson(
     map_df,
     name="Borough Boundaries",
-    style_function=lambda x: {'color':'blue', 'weight':2, 'fill':False}
+    tooltip=tooltip1,
+    popup=popup1,
+    style_function=lambda x: {
+        "fillColor": "transparent",
+        "color": "blue",
+        "weight": 2
+    }
 ).add_to(m)
 
 folium.GeoJson(
     zones_gdf,
     name="Zone Boundaries",
-    tooltip=folium.GeoJsonTooltip(fields=["Name"], aliases=["Zone: "]),
+    tooltip=tooltip2,
+    popup=popup2,
     style_function=lambda feature: {
         "color": "black",
         "weight": 2,
-        "fill": False,
         "fillColor": "transparent"
-    },
-    highlight_function=lambda x: {'fillColor': '#000000', 
-                                'color':'#000000', 
-                                'fillOpacity': 0, 
-                                'weight': 0.1,
-                                "fillColor": "transparent"}
-    # style_function=lambda x: {'color':'blue', 'weight':2, 'fill':False}
+    }
 ).add_to(m)
 
 map_df[['NAME', 'geometry']].explore(
     m=m,
-    name="NAME",
+    name="Boroughs",
     cmap=None,
-    style_kwds={'color': None, 'fillOpacity': 0}
+    highlight_kwds={'fillOpacity': 0.1},
+    style_kwds={'color': 'blue', 'fillOpacity': 0}
 )
 
 zones_gdf.explore(
     m=m,
-    name="Name",
+    name="Zones",
     cmap=None,
-    style_kwds={'color': None, 'fillOpacity': 0}
+    highlight_kwds={'fillOpacity': 0.1},
+    style_kwds={'color': 'black', 'fillOpacity': 0}
 )
 
 folium.LayerControl().add_to(m)
