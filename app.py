@@ -3,11 +3,27 @@ import streamlit as st
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
-from folium.plugins import MarkerCluster, OverlappingMarkerSpiderfier
+from folium.plugins import OverlappingMarkerSpiderfier
 import geopandas as gpd
+from zipfile import ZipFile
 
 df = pd.read_excel('Accommodation.xlsx')
 map_df = gpd.read_file('London_Borough_Excluding_MHW.shp')
+
+gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
+with ZipFile('Zones.kmz', 'r') as z:
+    kml_files = [name for name in z.namelist() if name.endswith('.kml')]
+    
+    if not kml_files:
+        print("No KML file found in KMZ!")
+    else:
+        kml_filename = kml_files[0]
+        z.extract(kml_filename, '.')
+        print(f"Extracted: {kml_filename}")
+
+zones_gdf = gpd.GeoDataFrame(gpd.read_file(kml_filename, driver='KML'), crs="EPSG:4326")
+zones_gdf.set_crs("EPSG:4326", inplace=True)
+zones_gdf.to_crs("EPSG:27700", inplace=True)
 
 df.fillna(method='ffill', inplace=True)
 
@@ -37,13 +53,31 @@ selected_rooms = st.sidebar.multiselect(
 
 filtered_df = filtered_df_location[filtered_df_location["Room Type"].isin(selected_rooms)] if selected_location else df
 
+
 m = folium.Map(location=[51.50161, -0.07625], zoom_start=12, width="%100", height="%100")
 
-
-geojson_layer = folium.GeoJson(
+folium.GeoJson(
     map_df,
     name="Borough Boundaries",
     style_function=lambda x: {'color':'blue', 'weight':2, 'fill':False}
+).add_to(m)
+
+folium.GeoJson(
+    zones_gdf,
+    name="Zone Boundaries",
+    tooltip=folium.GeoJsonTooltip(fields=["Name"], aliases=["Zone: "]),
+    style_function=lambda feature: {
+        "color": "black",
+        "weight": 2,
+        "fill": False,
+        "fillColor": "transparent"
+    },
+    highlight_function=lambda x: {'fillColor': '#000000', 
+                                'color':'#000000', 
+                                'fillOpacity': 0, 
+                                'weight': 0.1,
+                                "fillColor": "transparent"}
+    # style_function=lambda x: {'color':'blue', 'weight':2, 'fill':False}
 ).add_to(m)
 
 map_df[['NAME', 'geometry']].explore(
@@ -52,6 +86,15 @@ map_df[['NAME', 'geometry']].explore(
     cmap=None,
     style_kwds={'color': None, 'fillOpacity': 0}
 )
+
+zones_gdf.explore(
+    m=m,
+    name="Name",
+    cmap=None,
+    style_kwds={'color': None, 'fillOpacity': 0}
+)
+
+folium.LayerControl().add_to(m)
 
 # Add King's Strand Campus marker
 folium.Marker(
@@ -84,6 +127,5 @@ for (index1, index2), row in filtered_df.iterrows():
 
 oms = OverlappingMarkerSpiderfier().add_to(m)
 
-# st_folium(m)
 m.save('index.html')
-st_folium(m, key="map", width=900, height=600)
+st_folium(m, key="map", width=600, height=600)
