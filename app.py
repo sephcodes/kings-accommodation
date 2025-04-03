@@ -6,9 +6,21 @@ from streamlit_folium import st_folium
 from folium.plugins import OverlappingMarkerSpiderfier
 import geopandas as gpd
 from zipfile import ZipFile
+import requests
 
 df = pd.read_excel('Accommodation.xlsx')
 map_df = gpd.read_file('London_Borough_Excluding_MHW.shp')
+
+response = requests.get('https://api.tfl.gov.uk/StopPoint/Mode/tube')
+data = response.json()
+stop_points = data['stopPoints']
+tube_df = pd.json_normalize(stop_points)
+columns = ['id', 'commonName', 'lat', 'lon', 'indicator', 'stopLetter']
+tube_df = tube_df[columns]
+tube_df = tube_df[(tube_df['lat'] > 51.45) & (tube_df['lat'] < 51.57) & (tube_df['lon'] > -0.27) & (tube_df['lon'] < 0.0044)]
+tube_df['commonName'] = tube_df['commonName'].str.replace(' Underground Station','')
+tube_df['commonName'] = tube_df['commonName'].str.replace(' Station','')
+tube_df.drop_duplicates(subset=['commonName'], inplace=True)
 
 gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
 with ZipFile('Zones.kmz', 'r') as z:
@@ -19,7 +31,6 @@ with ZipFile('Zones.kmz', 'r') as z:
     else:
         kml_filename = kml_files[0]
         z.extract(kml_filename, '.')
-        print(f"Extracted: {kml_filename}")
 
 zones_gdf = gpd.GeoDataFrame(gpd.read_file(kml_filename, driver='KML'), crs="EPSG:4326")
 zones_gdf.set_crs("EPSG:4326", inplace=True)
@@ -67,6 +78,12 @@ popup2 = folium.GeoJsonPopup(
     localize=True,
     labels=True
 )
+# popup3 = folium.GeoJsonPopup(
+#     fields=["commonName"],
+#     aliases=["Station"],
+#     localize=True,
+#     labels=True
+# )
 
 tooltip1 = folium.GeoJsonTooltip(
     fields=["NAME"],
@@ -82,6 +99,13 @@ tooltip2 = folium.GeoJsonTooltip(
     labels=True,
     max_width=800,
 )
+# tooltip3 = folium.GeoJsonTooltip(
+#     fields=["commonName"],
+#     aliases=["Station"],
+#     localize=True,
+#     labels=True,
+#     max_width=800,
+# )
 
 folium.GeoJson(
     map_df,
@@ -152,6 +176,14 @@ for (index1, index2), row in filtered_df.iterrows():
         popup=popup,
         tooltip=tooltip_text,
         icon=folium.Icon(color='blue', icon='home')
+    ).add_to(m)
+
+for row in tube_df.itertuples(index=False):
+    folium.Marker(
+        location=[row.lat, row.lon],
+        popup=row.commonName,
+        tooltip=row.commonName,
+        icon=folium.Icon(prefix='fa', color='green', icon='train')
     ).add_to(m)
 
 oms = OverlappingMarkerSpiderfier().add_to(m)
