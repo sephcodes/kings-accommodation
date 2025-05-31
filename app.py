@@ -7,9 +7,10 @@ from folium.plugins import OverlappingMarkerSpiderfier
 import geopandas as gpd
 from zipfile import ZipFile
 import requests
+import datetime
 
 df = pd.read_excel('Accommodation.xlsx')
-map_df = gpd.read_file('London_Borough_Excluding_MHW.shp')
+map_df = gpd.read_file('statistical-gis-boundaries-london/ESRI/London_Borough_Excluding_MHW.shp')
 
 response = requests.get('https://api.tfl.gov.uk/StopPoint/Mode/tube')
 data = response.json()
@@ -34,7 +35,7 @@ with ZipFile('Zones.kmz', 'r') as z:
 
 zones_gdf = gpd.GeoDataFrame(gpd.read_file(kml_filename, driver='KML'), crs="EPSG:4326")
 zones_gdf.set_crs("EPSG:4326", inplace=True)
-zones_gdf.to_crs("EPSG:27700", inplace=True)
+# zones_gdf.to_crs("EPSG:27700", inplace=True)
 
 df.fillna(method='ffill', inplace=True)
 
@@ -45,24 +46,24 @@ df["loc"] = df["loc"].apply(lambda x: ast.literal_eval(x))
 
 st.title("Accommodation Locations")
 
-st.sidebar.title("Filters")
+# st.sidebar.title("Filters")
 
-if "selected_location" not in st.session_state:
-    st.session_state.selected_location = []
+# if "selected_location" not in st.session_state:
+#     st.session_state.selected_location = []
 
-selected_location = st.sidebar.multiselect(
-    "Select location", df.index.get_level_values(1).unique(),
-    default=st.session_state.selected_location
-)
+# selected_location = st.sidebar.multiselect(
+#     "Select location", df.index.get_level_values(1).unique(),
+#     default=st.session_state.selected_location
+# )
 
-filtered_df_location = df[df.index.get_level_values(1).isin(selected_location)]
-selected_rooms = st.sidebar.multiselect(
-    "Select rooms",
-    filtered_df_location["Room Type"].unique() if not filtered_df_location.empty else df["Room Type"].unique(),
-    default=filtered_df_location["Room Type"].unique() if not filtered_df_location.empty else [],
-)
+# filtered_df_location = df[df.index.get_level_values(1).isin(selected_location)]
+# selected_rooms = st.sidebar.multiselect(
+#     "Select rooms",
+#     filtered_df_location["Room Type"].unique() if not filtered_df_location.empty else df["Room Type"].unique(),
+#     default=filtered_df_location["Room Type"].unique() if not filtered_df_location.empty else [],
+# )
 
-filtered_df = filtered_df_location[filtered_df_location["Room Type"].isin(selected_rooms)] if selected_location else df
+# filtered_df = filtered_df_location[filtered_df_location["Room Type"].isin(selected_rooms)] if selected_location else df
 
 
 m = folium.Map(location=[51.50161, -0.07625], zoom_start=12, width="%100", height="%100")
@@ -106,6 +107,7 @@ tooltip2 = folium.GeoJsonTooltip(
 #     labels=True,
 #     max_width=800,
 # )
+
 
 folium.GeoJson(
     map_df,
@@ -157,7 +159,7 @@ folium.Marker(
     icon=folium.Icon(color='red', icon='info-sign')
 ).add_to(m)
 
-for (index1, index2), row in filtered_df.iterrows():
+for (index1, index2), row in df.iterrows():
     html = f"""
         <h3> {index2}</h3>
         <ul>
@@ -188,5 +190,6 @@ for row in tube_df.itertuples(index=False):
 
 oms = OverlappingMarkerSpiderfier().add_to(m)
 
-m.save('index.html')
+now = datetime.datetime.now()
+m.save(f'index_{now}.html')
 st_folium(m, key="map", width=600, height=600)
