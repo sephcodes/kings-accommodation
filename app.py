@@ -39,7 +39,7 @@ zones_gdf.set_crs("EPSG:4326", inplace=True)
 
 df.fillna(method='ffill', inplace=True)
 
-df.columns = ["Accommodation Type", "Features", "Location", "Distance to Strand", "Room Type", "Cost (per week)", "Details", "loc", "site"]
+df.columns = ["Accommodation Type", "Features", "Location", "Distance to Strand", "Room Type", "Cost (per week)", "Details", "loc", "site", "app"]
 df.set_index(["Accommodation Type", "Location"], inplace=True)
 df.drop(columns=["Features"], inplace=True)
 df["loc"] = df["loc"].apply(lambda x: ast.literal_eval(x))
@@ -167,7 +167,7 @@ for (index1, index2), row in df.iterrows():
             <li>Room Type: {row['Room Type']}</li>
             <li>Cost(per week): {row['Cost (per week)']}</li>
             <li>Details: {row['Details']}</li>
-            <li><a href="{row['site']}">site</a></li>
+            <li><a href="#" onclick="window.location='{row['app']}'; setTimeout(function(){{ window.location='{row['site']}'; }}, 150);">Open in App</a></li>
         </ul>
     """
     iframe = folium.IFrame(html=html, width=200, height=200)
