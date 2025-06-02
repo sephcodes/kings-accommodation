@@ -167,7 +167,8 @@ for (index1, index2), row in df.iterrows():
             <li>Room Type: {row['Room Type']}</li>
             <li>Cost(per week): {row['Cost (per week)']}</li>
             <li>Details: {row['Details']}</li>
-            <li><a href="#" onclick="window.location='{row['app']}'; setTimeout(function(){{ window.location='{row['site']}'; }}, 150);">Open in App</a></li>
+            <li><a href="{row['site']}">site</a></li>
+            <li><a href="{row['app']}" target="_top">Open in App</a><br/></li>
         </ul>
     """
     iframe = folium.IFrame(html=html, width=200, height=200)
