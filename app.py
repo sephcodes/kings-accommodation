@@ -160,6 +160,9 @@ folium.Marker(
 ).add_to(m)
 
 for (index1, index2), row in df.iterrows():
+    app_link = row['app']
+    app_li = f'<li><a href="{app_link}" target="_top">Open in App</a><br/></li>' if app_link else ''
+
     html = f"""
         <h3> {index2}</h3>
         <ul>
@@ -167,8 +170,8 @@ for (index1, index2), row in df.iterrows():
             <li>Room Type: {row['Room Type']}</li>
             <li>Cost(per week): {row['Cost (per week)']}</li>
             <li>Details: {row['Details']}</li>
-            <li><a href="{row['site']}">site</a></li>
-            <li><a href="{row['app']}" target="_top">Open in App</a><br/></li>
+            <li><a href="{row['site']}">Site</a></li>
+            {app_li}
         </ul>
     """
     iframe = folium.IFrame(html=html, width=200, height=200)
